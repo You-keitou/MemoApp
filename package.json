@@ -33,6 +33,11 @@
   "dependencies": {
     "@aspida/axios": "^1.11.0",
     "@aspida/swr": "^1.11.0",
+    "@emotion/react": "^11.10.6",
+    "@emotion/server": "^11.10.0",
+    "@mantine/core": "^6.0.7",
+    "@mantine/hooks": "^6.0.7",
+    "@mantine/next": "^6.0.7",
     "@prisma/client": "^4.6.1",
     "axios": "^0.27.2",
     "next": "^13.2.4",

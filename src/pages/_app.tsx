@@ -2,6 +2,7 @@ import '~/styles/globals.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { staticPath } from '~/utils/$path'
+import { MantineProvider } from '@mantine/core'
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
   return (
@@ -9,7 +10,13 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       <Head>
         <link rel="icon" href={staticPath.favicon_png} />
       </Head>
-      <Component {...pageProps} />
+      <MantineProvider
+        theme={{ colorScheme: 'light' }}
+        withGlobalStyles
+        withNormalizeCSS
+      >
+        <Component {...pageProps} />
+      </MantineProvider>
     </>
   )
 }
