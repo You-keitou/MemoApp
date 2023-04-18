@@ -1,5 +1,5 @@
 import fastify from 'fastify'
-import controller from '$/api/tasks/controller'
+import controller from '$/api/memos/controller'
 import { fail } from 'assert'
 
 test('dependency injection into controller', async () => {

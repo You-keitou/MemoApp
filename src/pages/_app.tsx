@@ -9,6 +9,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     <>
       <Head>
         <link rel="icon" href={staticPath.favicon_png} />
+        <title>MemoApp</title>
       </Head>
       <MantineProvider
         theme={{ colorScheme: 'light' }}
