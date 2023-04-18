@@ -4,6 +4,7 @@ import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
 import fastifyStatic from '@fastify/static'
 import fastifyJwt from '@fastify/jwt'
+import prismaPlugin from '$/plugins/prisma'
 import {
   API_JWT_SECRET,
   API_BASE_PATH,
@@ -19,6 +20,7 @@ export const init = (serverFactory?: FastifyServerFactory) => {
     root: path.join(__dirname, 'static'),
     prefix: '/static/'
   })
+  app.register(prismaPlugin)
   if (API_UPLOAD_DIR) {
     app.after(() => {
       app.register(fastifyStatic, {
