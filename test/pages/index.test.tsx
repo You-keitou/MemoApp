@@ -21,11 +21,23 @@ let fastify: FastifyInstance
 beforeAll(() => {
   fastify = Fastify({ forceCloseConnections: true })
   fastify.register(cors)
-  fastify.get(apiClient.tasks.$path(), (_, reply) => {
+  fastify.get(apiClient.memos.$path(), (_, reply) => {
     reply.send(
-      res<typeof apiClient.tasks.$get>([
-        { id: 1, label: 'foo task', done: false },
-        { id: 2, label: 'bar task', done: true }
+      res<typeof apiClient.memos.$get>([
+        {
+          id: '1',
+          title: 'foo task',
+          content: 'foo content',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: '2',
+          title: 'bar task',
+          content: 'bar content',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
       ])
     )
   })

@@ -1,15 +1,13 @@
-import useAspidaSWR from '@aspida/swr'
-import { Input } from '@mantine/core'
 import { NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Layout from '~/components/Layout'
 import Demo from '~/components/RichText'
-import { apiClient } from '~/utils/apiClient'
 import type { Memo } from '$prisma/client'
 import {
   currentMemoIdState,
-  allMemoTitleandIdState
+  allMemoTitleandIdState,
+  allMemoState
 } from '~/store/recoil_state'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import type { MemoTitleandId } from '~/types/memo'
@@ -19,23 +17,32 @@ const index: NextPage = () => {
   const allMemoTitleandId = useRecoilValue<MemoTitleandId[]>(
     allMemoTitleandIdState
   )
+  const allMemos = useRecoilValue<Memo[]>(allMemoState)
   const [currentMemoId, setCurrentMemoId] =
     useRecoilState<string>(currentMemoIdState)
+
+  const [currentMemo, setCurrentMemo] = useState<Memo>({
+    id: '',
+    title: '',
+    content: '',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  })
+
   useEffect(() => {
     if (router.isReady) {
       setCurrentMemoId(router.query.id as string)
     }
-  }, [router, router.query])
-  const { data: memo, error } = useAspidaSWR(
-    apiClient.memos._memoId(currentMemoId)
-  )
-  if (error) return <div>failed to load</div>
-  if (!memo) return <div>loading...</div>
-  console.log(memo.title)
-
+  }, [router.query])
+  useEffect(() => {
+    const currentMemo = allMemos.find((memo) => memo.id === currentMemoId)
+    if (currentMemo) {
+      setCurrentMemo(currentMemo)
+    }
+  }, [currentMemoId])
   return (
     <Layout listOfMemos={allMemoTitleandId}>
-      <Demo title={memo.title} content={memo.content} />
+      <Demo title={currentMemo.title} content={currentMemo.content} />
     </Layout>
   )
 }
