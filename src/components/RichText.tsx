@@ -45,7 +45,6 @@ const postMemo = async (
 }
 
 function Demo({ title, content }: TextEditorProps) {
-  console.log(title)
   const currentMemoId = useRecoilValue<string>(currentMemoIdState)
   const [memoTitle, setTitle] = useState<string>(title)
   //文字がたくさん入力された時に、リクエストをしすぎないようにする
@@ -88,6 +87,7 @@ function Demo({ title, content }: TextEditorProps) {
 
   return (
     <>
+      <></>
       <Input.Wrapper label={'title'}>
         <Input
           value={memoTitle}
