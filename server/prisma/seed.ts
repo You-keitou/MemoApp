@@ -2,25 +2,28 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  const task1 = await prisma.task.upsert({
-    where: { id: 1 },
-    update: {},
-    create: {
-      label: 'task1',
-      done: true
+  const memo1 = await prisma.memo.create({
+    data: {
+      title: 'Hello',
+      content: '今日はいい天気ですね'
+    }
+  })
+  const memo2 = await prisma.memo.create({
+    data: {
+      title: '二回目のメモ',
+      content: '今日はいい天気ですね。明日もいい天気ですね'
     }
   })
 
-  const task2 = await prisma.task.upsert({
-    where: { id: 2 },
-    update: {},
-    create: {
-      label: 'task2',
-      done: false
+  const memo3 = await prisma.memo.create({
+    data: {
+      title: '三回目のメモ',
+      content:
+        '今日はいい天気ですね。明日もいい天気ですね。明後日もいい天気ですね'
     }
   })
 
-  console.log({ task1, task2 })
+  console.log({ memo1, memo2, memo3 })
 }
 
 main()

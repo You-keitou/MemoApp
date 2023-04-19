@@ -1,49 +1,53 @@
-import useAspidaSWR from '@aspida/swr'
-import { AppShell, Navbar, Header, NavLink } from '@mantine/core'
-import { apiClient } from '~/utils/apiClient'
+import { AppShell, Box, Header, NavLink } from '@mantine/core'
+import type { Memo } from '$prisma/client'
+import { pagesPath } from '~/utils/$path'
+import Memobar from './NavbarSearch'
+import { IconBook } from '@tabler/icons-react'
+import { memo } from 'react'
+import { useRouter } from 'next/router'
+import type { MemoTitleandId } from '~/types/memo'
+import { useRecoilState } from 'recoil'
+import { currentMemoIdState } from '~/store/recoil_state'
 
+//レイアウトのpropsの型を定義する
 type layoutProps = {
   children: React.ReactNode
-  isHome?: boolean
+  listOfMemos: MemoTitleandId[]
 }
 
-function Layout({ children }: layoutProps) {
-  const { data: memos, error, mutate } = useAspidaSWR(apiClient.memos)
+const Layout = memo(({ children, listOfMemos }: layoutProps) => {
+  const [currentMemoId, setCurrentMemoId] =
+    useRecoilState<string>(currentMemoIdState)
+  const active = listOfMemos.findIndex((memo) => memo.id === currentMemoId)
+  const router = useRouter()
 
-  const getNavItems = (): React.ReactNode => {
-    if (error) {
-      return (
-        <NavLink href="/login" color="red">
-          Error
-        </NavLink>
-      )
-    } else {
-      //もし、memosがなかったら、navbarにloadingを表示する
-      if (!memos) {
-        return (
-          <NavLink href="/login" color="red">
-            Loading...
-          </NavLink>
-        )
-      }
-      //もし、memosがあったら、navbarにmemosを表示する
-      return memos.map((memo) => (
-        <NavLink href={`/memos/${memo.id}`} key={memo.id}>
-          {memo.title}
-        </NavLink>
-      ))
-    }
-  }
+  const listData = listOfMemos.map((memo) => ({
+    id: memo.id,
+    icon: IconBook,
+    label: memo.title
+  }))
 
-  const navItems = getNavItems()
+  const listItems = listData.map((item, index) => (
+    <NavLink
+      key={index}
+      active={active === index}
+      icon={<item.icon size={'1rem'} stroke={1.5} />}
+      label={item.label}
+      onClick={(e) => {
+        e.preventDefault()
+        setCurrentMemoId(item.id)
+        router.push(pagesPath._id(item.id).$url())
+      }}
+    />
+  ))
 
   return (
     <AppShell
       padding="md"
       navbar={
-        <Navbar width={{ base: 300 }} height={500} p="xs">
-          {navItems}
-        </Navbar>
+        <Memobar>
+          <Box w={220}>{listItems}</Box>
+        </Memobar>
       }
       header={
         <Header height={60} p="xs">
@@ -63,6 +67,8 @@ function Layout({ children }: layoutProps) {
       {children}
     </AppShell>
   )
-}
+})
+
+Layout.displayName = 'Layout'
 
 export default Layout

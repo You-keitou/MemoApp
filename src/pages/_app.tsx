@@ -3,6 +3,7 @@ import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { staticPath } from '~/utils/$path'
 import { MantineProvider } from '@mantine/core'
+import { RecoilRoot } from 'recoil'
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
   return (
@@ -11,13 +12,15 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         <link rel="icon" href={staticPath.favicon_png} />
         <title>MemoApp</title>
       </Head>
-      <MantineProvider
-        theme={{ colorScheme: 'light' }}
-        withGlobalStyles
-        withNormalizeCSS
-      >
-        <Component {...pageProps} />
-      </MantineProvider>
+      <RecoilRoot>
+        <MantineProvider
+          theme={{ colorScheme: 'light' }}
+          withGlobalStyles
+          withNormalizeCSS
+        >
+          <Component {...pageProps} />
+        </MantineProvider>
+      </RecoilRoot>
     </>
   )
 }
