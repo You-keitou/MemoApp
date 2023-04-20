@@ -7,14 +7,7 @@ import TextAlign from '@tiptap/extension-text-align'
 import Superscript from '@tiptap/extension-superscript'
 import SubScript from '@tiptap/extension-subscript'
 import { apiClient } from '~/utils/apiClient'
-import {
-  Text,
-  Container,
-  Flex,
-  Input,
-  Space,
-  Notification
-} from '@mantine/core'
+import { Text, Container, Flex, Input, Space } from '@mantine/core'
 import { useEffect, useState } from 'react'
 import { KeyedMutator } from 'swr'
 import { Memo } from '$prisma/client'
