@@ -1,14 +1,7 @@
-import {
-  Button,
-  Center,
-  Container,
-  Navbar,
-  ScrollArea,
-  createStyles
-} from '@mantine/core'
+import { Center, Navbar, ScrollArea, createStyles } from '@mantine/core'
 import { KeyedMutator } from 'swr'
 import type { Memo } from '$prisma/client'
-import { IconTextPlus } from '@tabler/icons-react'
+import { IconBellPlusFilled, IconFilePlus, IconPlus } from '@tabler/icons-react'
 import { apiClient } from '~/utils/apiClient'
 //Navbarのpropsの型を定義する
 type navbarProps = {
@@ -30,10 +23,10 @@ function Memobar({ children, fetcher }: navbarProps) {
         {children}
         <Center>
           <div className={classes.div}>
-            <IconTextPlus
+            <IconFilePlus
               size={48}
               strokeWidth={2}
-              color={'#4044bf'}
+              color={'#000000'}
               onClick={async () => {
                 apiClient.memos
                   .post({

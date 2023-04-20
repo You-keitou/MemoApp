@@ -7,10 +7,23 @@ import TextAlign from '@tiptap/extension-text-align'
 import Superscript from '@tiptap/extension-superscript'
 import SubScript from '@tiptap/extension-subscript'
 import { apiClient } from '~/utils/apiClient'
-import { Text, Container, Flex, Input } from '@mantine/core'
+import {
+  Text,
+  Container,
+  Flex,
+  Input,
+  Space,
+  Notification
+} from '@mantine/core'
 import { useEffect, useState } from 'react'
 import { KeyedMutator } from 'swr'
 import { Memo } from '$prisma/client'
+import {
+  IconAlertCircle,
+  IconCheck,
+  IconRefreshDot,
+  IconX
+} from '@tabler/icons-react'
 
 type TextEditorProps = {
   title: string
@@ -19,46 +32,73 @@ type TextEditorProps = {
   eventHandler: KeyedMutator<Memo[]>
 }
 
+type PostMemoProps = {
+  content: string
+  currentMemoId: string
+  titleorContent: 'title' | 'content'
+  fetchData?: KeyedMutator<Memo[]>
+}
+
 type updatedTime = {
   title: Date
   content: Date
 }
 
-const postMemo = async (
-  content: string,
-  currentMemoId: string,
-  titleorContent: 'title' | 'content',
-  fetchData?: KeyedMutator<Memo[]>,
-  lastUpdated?: updatedTime
-) => {
-  const now = new Date()
+type postStatusProps = {
+  isSaved: 'saved' | 'unsaved' | 'saving'
+}
+
+function PostStatus({ isSaved }: postStatusProps) {
+  const IconProperty = {
+    saved: {
+      Icon: IconCheck,
+      color: 'green',
+      text: '保存済み'
+    },
+    unsaved: {
+      Icon: IconAlertCircle,
+      color: 'red',
+      text: '未保存'
+    },
+    saving: {
+      Icon: IconRefreshDot,
+      color: 'yellow',
+      text: '保存中'
+    }
+  }
+
+  const { Icon, color, text } = IconProperty[isSaved]
+  return (
+    <Flex justify="flex-end" style={{ height: '100%' }}>
+      <Text color={color}>
+        <Icon size={20} />
+        {text}
+      </Text>
+    </Flex>
+  )
+}
+
+const postMemo = async ({
+  content,
+  currentMemoId,
+  titleorContent,
+  fetchData
+}: PostMemoProps) => {
   const bodyContent =
     titleorContent === 'title' ? { title: content } : { content: content }
-  const lastUpdatedTime =
-    titleorContent === 'title' ? lastUpdated?.title : lastUpdated?.content
-
-  if (!lastUpdatedTime || now.getTime() - lastUpdatedTime.getTime() > 2000) {
-    await apiClient.memos
-      ._memoId(currentMemoId)
-      .put({
-        body: bodyContent
-      })
-      .then((res) => {
-        if (res.status === 204) {
-          if (lastUpdated) {
-            if (titleorContent === 'title') {
-              lastUpdated.title = now
-            } else {
-              lastUpdated.content = now
-            }
-          }
-          if (fetchData) fetchData()
-        } else
-          return Promise.reject(
-            new Error('failed to update memo title or content')
-          )
-      })
-  }
+  await apiClient.memos
+    ._memoId(currentMemoId)
+    .put({
+      body: bodyContent
+    })
+    .then((res) => {
+      if (res.status === 204) {
+        if (fetchData) fetchData()
+      } else
+        return Promise.reject(
+          alert('メモの更新に失敗しました。もう一度お試しください。')
+        )
+    })
 }
 
 function Demo({
@@ -67,27 +107,69 @@ function Demo({
   currentMemoId,
   eventHandler
 }: TextEditorProps) {
+  const [isSaved, setIsSaved] = useState<'saved' | 'saving' | 'unsaved'>(
+    'saved'
+  )
   const [memoTitle, setTitle] = useState<string>(title)
   //文字がたくさん入力された時に、リクエストをしすぎないようにする
   const lastUpdated: updatedTime = {
     title: new Date(),
     content: new Date()
   }
+
+  const saveDataAndFetch = async (
+    content: string,
+    currentMemoId: string,
+    titleorContent: 'title' | 'content',
+    fetchData?: KeyedMutator<Memo[]>
+  ) => {
+    setIsSaved('saving')
+    await postMemo({
+      content,
+      currentMemoId,
+      titleorContent,
+      fetchData
+    })
+      .then((res) => {
+        console.log(res)
+        setIsSaved('saved')
+      })
+      .catch((error) => {
+        console.log(error)
+        setIsSaved('unsaved')
+      })
+  }
+
   const editor = useEditor({
     onBeforeCreate({ editor }) {
       editor.on('update', async () => {
-        await postMemo(
-          editor.getHTML(),
-          currentMemoId,
-          'content',
-          undefined,
-          lastUpdated
-        )
+        if (Date.now() - lastUpdated.content.getTime() < 1000) return
+        else {
+          await saveDataAndFetch(
+            editor.getHTML(),
+            currentMemoId,
+            'content',
+            undefined
+          ).then(() => {
+            lastUpdated.content = new Date()
+          })
+        }
       })
     },
     //フォーカスが外れたときにリクエストを送る
     onBlur({ editor }) {
-      postMemo(editor.getHTML(), currentMemoId, 'content', eventHandler)
+      if (editor.getText().length > 10000) {
+        setIsSaved('unsaved')
+        return
+      }
+      if (Date.now() - lastUpdated.content.getTime() > 1000) {
+        saveDataAndFetch(
+          editor.getHTML(),
+          currentMemoId,
+          'content',
+          eventHandler
+        )
+      }
     },
     extensions: [
       StarterKit,
@@ -104,36 +186,51 @@ function Demo({
   //タイトルが変更されたとき
   const handleTitleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value)
-    postMemo(
+    if (e.target.value.length > 100) {
+      setIsSaved('unsaved')
+      return
+    }
+    if (Date.now() - lastUpdated.title.getTime() < 1000) return
+    await saveDataAndFetch(
       e.target.value,
       currentMemoId,
       'title',
-      undefined,
-      lastUpdated
-    ).catch((error) => {
-      console.log(error)
+      undefined
+    ).then(() => {
+      lastUpdated.title = new Date()
     })
   }
 
   const handleTitleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
-    postMemo(e.target.value, currentMemoId, 'title', eventHandler).catch(
-      (error) => {
-        console.log(error)
-      }
-    )
+    if (e.target.value.length > 100) {
+      setIsSaved('unsaved')
+      return
+    }
+    if (Date.now() - lastUpdated.title.getTime() > 1000)
+      await saveDataAndFetch(
+        e.target.value,
+        currentMemoId,
+        'title',
+        eventHandler
+      ).then(() => {
+        lastUpdated.title = new Date()
+      })
   }
 
   useEffect(() => {
     editor?.commands.setContent(content)
-    console.log(editor?.getText())
     setTitle(title)
   }, [content, title])
 
   return (
     <Container>
-      <Flex>
-        <Text>タイトル{title.length}/100</Text>
-        <Text>本文{editor?.getText().length}/10000</Text>
+      <PostStatus isSaved={isSaved} />
+      <Space py={2} />
+      <Flex justify={'flex-end'}>
+        <Text mr={10}>タイトル文字数</Text>
+        <Text color={memoTitle.length > 100 ? 'red' : 'black'}>
+          {memoTitle.length}/100
+        </Text>
       </Flex>
       <Input.Wrapper label={'title'}>
         <Input
@@ -142,6 +239,15 @@ function Demo({
           onBlur={handleTitleBlur}
         />
       </Input.Wrapper>
+      <Space py={2} />
+      <Flex justify={'flex-end'} m={10}>
+        <Text mr={10}>メモ文字数</Text>
+        {editor && (
+          <Text color={editor?.getText().length > 10000 ? 'red' : 'black'}>
+            {editor?.getText().length}/10000
+          </Text>
+        )}
+      </Flex>
       <RichTextEditor editor={editor}>
         <RichTextEditor.Toolbar sticky stickyOffset={60}>
           <RichTextEditor.ControlsGroup>

@@ -4,7 +4,7 @@ import { KeyedMutator } from 'swr'
 import { pagesPath } from '~/utils/$path'
 import { IconTrash } from '@tabler/icons-react'
 import Link from 'next/link'
-import { NavLink, createStyles } from '@mantine/core'
+import { NavLink } from '@mantine/core'
 import { apiClient } from '~/utils/apiClient'
 
 type listItemProps = {
@@ -32,7 +32,8 @@ const listItem = ({ item, fetcher }: ComponentProps) => {
               <IconTrash
                 size={'1rem'}
                 stroke={1.5}
-                onClick={async () => {
+                onClick={async (e) => {
+                  e.preventDefault()
                   await apiClient.memos
                     ._memoId(item.id)
                     .$delete()
