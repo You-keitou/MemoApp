@@ -1,14 +1,16 @@
 import { Center, Navbar, ScrollArea, createStyles } from '@mantine/core'
 import { KeyedMutator } from 'swr'
 import type { Memo } from '$prisma/client'
-import { IconBellPlusFilled, IconFilePlus, IconPlus } from '@tabler/icons-react'
+import { IconFilePlus } from '@tabler/icons-react'
 import { apiClient } from '~/utils/apiClient'
+
 //Navbarのpropsの型を定義する
 type navbarProps = {
   children: React.ReactNode
   fetcher: KeyedMutator<Memo[]>
 }
 
+//divのスタイルを定義する
 const useStyles = createStyles(() => ({
   div: {
     cursor: 'pointer'

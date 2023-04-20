@@ -4,7 +4,6 @@ import useAspidaSWR from '@aspida/swr'
 import { apiClient } from '~/utils/apiClient'
 import { ServerError } from '~/components/Error'
 import CustomLoader from '~/components/Loader'
-import { Box, Center, Container, Flex } from '@mantine/core'
 import FeaturesCards from '~/components/FeturesCards'
 
 const Home: NextPage = () => {

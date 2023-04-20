@@ -9,13 +9,7 @@ import {
   Container,
   rem
 } from '@mantine/core'
-import {
-  IconGauge,
-  IconUser,
-  IconCookie,
-  IconArrowLeftRight,
-  IconClock
-} from '@tabler/icons-react'
+import { IconCookie, IconArrowLeftRight, IconClock } from '@tabler/icons-react'
 
 const mockdata = [
   {

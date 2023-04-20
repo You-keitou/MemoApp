@@ -18,13 +18,9 @@ import {
 import { useEffect, useState } from 'react'
 import { KeyedMutator } from 'swr'
 import { Memo } from '$prisma/client'
-import {
-  IconAlertCircle,
-  IconCheck,
-  IconRefreshDot,
-  IconX
-} from '@tabler/icons-react'
+import { IconAlertCircle, IconCheck, IconRefreshDot } from '@tabler/icons-react'
 
+//TextEditorのpropsの型を定義する
 type TextEditorProps = {
   title: string
   content: string
@@ -32,6 +28,7 @@ type TextEditorProps = {
   eventHandler: KeyedMutator<Memo[]>
 }
 
+//メモをポストする際の引数の型を定義する
 type PostMemoProps = {
   content: string
   currentMemoId: string
@@ -39,16 +36,20 @@ type PostMemoProps = {
   fetchData?: KeyedMutator<Memo[]>
 }
 
+//メモの更新時間を定義する
 type updatedTime = {
   title: Date
   content: Date
 }
 
+//PostStatusのpropsの型を定義する
 type postStatusProps = {
   isSaved: 'saved' | 'unsaved' | 'saving'
 }
 
+//保存状態を表示するコンポーネント
 function PostStatus({ isSaved }: postStatusProps) {
+  //アイコンのプロパティを定義する
   const IconProperty = {
     saved: {
       Icon: IconCheck,
@@ -78,12 +79,14 @@ function PostStatus({ isSaved }: postStatusProps) {
   )
 }
 
+//メモをポストする関数
 const postMemo = async ({
   content,
   currentMemoId,
   titleorContent,
   fetchData
 }: PostMemoProps) => {
+  //メモのタイトルか本文かを判定する
   const bodyContent =
     titleorContent === 'title' ? { title: content } : { content: content }
   await apiClient.memos
@@ -93,6 +96,7 @@ const postMemo = async ({
     })
     .then((res) => {
       if (res.status === 204) {
+        //メモの更新に成功したら、メモの一覧を再取得する
         if (fetchData) fetchData()
       } else
         return Promise.reject(
@@ -107,16 +111,18 @@ function Demo({
   currentMemoId,
   eventHandler
 }: TextEditorProps) {
+  //保存状態を管理する
   const [isSaved, setIsSaved] = useState<'saved' | 'saving' | 'unsaved'>(
     'saved'
   )
+  //タイトルを管理する
   const [memoTitle, setTitle] = useState<string>(title)
-  //文字がたくさん入力された時に、リクエストをしすぎないようにする
+  //タイトルの更新時間を管理する
   const lastUpdated: updatedTime = {
     title: new Date(),
     content: new Date()
   }
-
+  //Postとgetを必要に応じて行う関数
   const saveDataAndFetch = async (
     content: string,
     currentMemoId: string,
@@ -143,6 +149,12 @@ function Demo({
   const editor = useEditor({
     onBeforeCreate({ editor }) {
       editor.on('update', async () => {
+        //文字数が10000文字を超えたら保存しない
+        if (editor.getText().length > 10000) {
+          setIsSaved('unsaved')
+          return
+        }
+        //1000ミリ秒以内に更新があった場合はリクエストを送らない
         if (Date.now() - lastUpdated.content.getTime() < 1000) return
         else {
           await saveDataAndFetch(
@@ -183,6 +195,7 @@ function Demo({
     content: content,
     autofocus: true
   })
+
   //タイトルが変更されたとき
   const handleTitleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value)
@@ -201,6 +214,7 @@ function Demo({
     })
   }
 
+  //タイトルのフォーカスが外れたとき
   const handleTitleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     if (e.target.value.length > 100) {
       setIsSaved('unsaved')
@@ -216,7 +230,7 @@ function Demo({
         lastUpdated.title = new Date()
       })
   }
-
+  //contentを監視して、変更があったらeditorに反映する
   useEffect(() => {
     editor?.commands.setContent(content)
     setTitle(title)

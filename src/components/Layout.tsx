@@ -9,6 +9,7 @@ import { Memo } from '$prisma/client'
 import ListItem from './ListItem'
 
 //レイアウトのpropsの型を定義する
+//feacherはswrのKeyedMutator<Memo[]>型で、もう一度データベースからデータを取得するために使う
 type layoutProps = {
   children: React.ReactNode
   listOfMemos: MemoTitleandId[]
@@ -16,6 +17,7 @@ type layoutProps = {
 }
 
 const Layout = memo(({ children, listOfMemos, fetcher }: layoutProps) => {
+  //引数でもらったlistOfMemosをmapで回して、整形する
   const listData = listOfMemos.map((memo) => ({
     id: memo.id,
     icon: IconBook,
@@ -43,7 +45,6 @@ const Layout = memo(({ children, listOfMemos, fetcher }: layoutProps) => {
         <Header height={70} p="xs">
           {
             // Your header here
-            //Icon とタイトル
             <Image
               src={staticPath.vercel_svg}
               height={50}
