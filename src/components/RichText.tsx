@@ -7,56 +7,87 @@ import TextAlign from '@tiptap/extension-text-align'
 import Superscript from '@tiptap/extension-superscript'
 import SubScript from '@tiptap/extension-subscript'
 import { apiClient } from '~/utils/apiClient'
-import useAspidaSWR from '@aspida/swr'
-import { useRecoilValue } from 'recoil'
-import { Input } from '@mantine/core'
-import { currentMemoIdState } from '~/store/recoil_state'
+import { Text, Container, Flex, Input } from '@mantine/core'
 import { useEffect, useState } from 'react'
+import { KeyedMutator } from 'swr'
+import { Memo } from '$prisma/client'
 
 type TextEditorProps = {
   title: string
   content: string
+  currentMemoId: string
+  eventHandler: KeyedMutator<Memo[]>
 }
 
-const contentLastUpdated = new Date()
-const titleLastUpdated = new Date()
+type updatedTime = {
+  title: Date
+  content: Date
+}
 
 const postMemo = async (
   content: string,
   currentMemoId: string,
-  titleorContent: 'title' | 'content'
+  titleorContent: 'title' | 'content',
+  fetchData?: KeyedMutator<Memo[]>,
+  lastUpdated?: updatedTime
 ) => {
   const now = new Date()
   const bodyContent =
     titleorContent === 'title' ? { title: content } : { content: content }
-  const lastUpdated =
-    titleorContent === 'title' ? titleLastUpdated : contentLastUpdated
-  if (now.getTime() - lastUpdated.getTime() > 1000) {
-    titleLastUpdated.setTime(now.getTime())
+  const lastUpdatedTime =
+    titleorContent === 'title' ? lastUpdated?.title : lastUpdated?.content
+
+  if (!lastUpdatedTime || now.getTime() - lastUpdatedTime.getTime() > 2000) {
     await apiClient.memos
       ._memoId(currentMemoId)
       .put({
         body: bodyContent
       })
-      .then(() => {
-        console.log('updated')
+      .then((res) => {
+        if (res.status === 204) {
+          if (lastUpdated) {
+            if (titleorContent === 'title') {
+              lastUpdated.title = now
+            } else {
+              lastUpdated.content = now
+            }
+          }
+          if (fetchData) fetchData()
+        } else
+          return Promise.reject(
+            new Error('failed to update memo title or content')
+          )
       })
   }
 }
 
-function Demo({ title, content }: TextEditorProps) {
-  const currentMemoId = useRecoilValue<string>(currentMemoIdState)
+function Demo({
+  title,
+  content,
+  currentMemoId,
+  eventHandler
+}: TextEditorProps) {
   const [memoTitle, setTitle] = useState<string>(title)
   //文字がたくさん入力された時に、リクエストをしすぎないようにする
+  const lastUpdated: updatedTime = {
+    title: new Date(),
+    content: new Date()
+  }
   const editor = useEditor({
     onBeforeCreate({ editor }) {
       editor.on('update', async () => {
-        await postMemo(editor.getHTML(), currentMemoId, 'content')
+        await postMemo(
+          editor.getHTML(),
+          currentMemoId,
+          'content',
+          undefined,
+          lastUpdated
+        )
       })
     },
     //フォーカスが外れたときにリクエストを送る
     onBlur({ editor }) {
-      postMemo(editor.getHTML(), currentMemoId, 'content')
+      postMemo(editor.getHTML(), currentMemoId, 'content', eventHandler)
     },
     extensions: [
       StarterKit,
@@ -73,21 +104,37 @@ function Demo({ title, content }: TextEditorProps) {
   //タイトルが変更されたとき
   const handleTitleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value)
-    await postMemo(e.target.value, currentMemoId, 'title')
+    postMemo(
+      e.target.value,
+      currentMemoId,
+      'title',
+      undefined,
+      lastUpdated
+    ).catch((error) => {
+      console.log(error)
+    })
   }
 
   const handleTitleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
-    await postMemo(e.target.value, currentMemoId, 'title')
+    postMemo(e.target.value, currentMemoId, 'title', eventHandler).catch(
+      (error) => {
+        console.log(error)
+      }
+    )
   }
 
   useEffect(() => {
     editor?.commands.setContent(content)
+    console.log(editor?.getText())
     setTitle(title)
   }, [content, title])
 
   return (
-    <>
-      <></>
+    <Container>
+      <Flex>
+        <Text>タイトル{title.length}/100</Text>
+        <Text>本文{editor?.getText().length}/10000</Text>
+      </Flex>
       <Input.Wrapper label={'title'}>
         <Input
           value={memoTitle}
@@ -137,7 +184,7 @@ function Demo({ title, content }: TextEditorProps) {
         </RichTextEditor.Toolbar>
         <RichTextEditor.Content />
       </RichTextEditor>
-    </>
+    </Container>
   )
 }
 

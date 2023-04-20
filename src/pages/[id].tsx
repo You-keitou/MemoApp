@@ -4,45 +4,46 @@ import { useEffect, useState } from 'react'
 import Layout from '~/components/Layout'
 import Demo from '~/components/RichText'
 import type { Memo } from '$prisma/client'
-import {
-  currentMemoIdState,
-  allMemoTitleandIdState,
-  allMemoState
-} from '~/store/recoil_state'
-import { useRecoilState, useRecoilValue } from 'recoil'
-import type { MemoTitleandId } from '~/types/memo'
+import useAspidaSWR from '@aspida/swr'
+import { apiClient } from '~/utils/apiClient'
 
 const index: NextPage = () => {
   const router = useRouter()
-  const allMemoTitleandId = useRecoilValue<MemoTitleandId[]>(
-    allMemoTitleandIdState
-  )
-  const allMemos = useRecoilValue<Memo[]>(allMemoState)
-  const [currentMemoId, setCurrentMemoId] =
-    useRecoilState<string>(currentMemoIdState)
-
-  const [currentMemo, setCurrentMemo] = useState<Memo>({
-    id: '',
-    title: '',
-    content: '',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  })
+  const [currentMemoId, setCurrentMemoId] = useState<string>()
 
   useEffect(() => {
     if (router.isReady) {
       setCurrentMemoId(router.query.id as string)
     }
-  }, [router.query])
-  useEffect(() => {
-    const currentMemo = allMemos.find((memo) => memo.id === currentMemoId)
-    if (currentMemo) {
-      setCurrentMemo(currentMemo)
+  }, [router, router.isReady])
+
+  const {
+    data: memos,
+    error: memosError,
+    mutate
+  } = useAspidaSWR(apiClient.memos, {})
+  if (memosError) return <div>failed to load</div>
+  if (!memos) return <div>loading...</div>
+
+  const allMemoTitleandId = memos.map((memo) => {
+    return {
+      id: memo.id,
+      title: memo.title,
+      isCurrent: memo.id === currentMemoId
     }
-  }, [currentMemoId])
+  })
+
+  const currentMemo = memos.find((memo) => memo.id === currentMemoId) as Memo
   return (
-    <Layout listOfMemos={allMemoTitleandId}>
-      <Demo title={currentMemo.title} content={currentMemo.content} />
+    <Layout listOfMemos={allMemoTitleandId} fetcher={mutate}>
+      {currentMemo && (
+        <Demo
+          title={currentMemo.title}
+          content={currentMemo.content}
+          currentMemoId={currentMemo.id}
+          eventHandler={mutate}
+        />
+      )}
     </Layout>
   )
 }

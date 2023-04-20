@@ -1,48 +1,41 @@
-import { AppShell, Box, Header, Image, NavLink } from '@mantine/core'
-
-import { pagesPath, staticPath } from '~/utils/$path'
+import { AppShell, Box, Header, Image } from '@mantine/core'
+import { staticPath } from '~/utils/$path'
 import Memobar from './NavbarSearch'
 import { IconBook } from '@tabler/icons-react'
 import { memo } from 'react'
-
 import type { MemoTitleandId } from '~/types/memo'
-import { useRouter } from 'next/router'
+import { KeyedMutator } from 'swr'
+import { Memo } from '$prisma/client'
+import ListItem from './ListItem'
 
 //レイアウトのpropsの型を定義する
 type layoutProps = {
   children: React.ReactNode
   listOfMemos: MemoTitleandId[]
+  fetcher?: KeyedMutator<Memo[]>
 }
 
-const Layout = memo(({ children, listOfMemos }: layoutProps) => {
+const Layout = memo(({ children, listOfMemos, fetcher }: layoutProps) => {
   const listData = listOfMemos.map((memo) => ({
     id: memo.id,
     icon: IconBook,
     label: memo.title,
     active: memo.isCurrent
   }))
-  const router = useRouter()
-
-  const listItems = listData.map((item, index) => (
-    <NavLink
-      key={index}
-      active={item.active}
-      icon={<item.icon size={'1rem'} stroke={1.5} />}
-      label={item.label}
-      onClick={(e) => {
-        e.preventDefault()
-        router.push(pagesPath._id(item.id).$url())
-      }}
-    />
-  ))
 
   return (
     <AppShell
       padding="md"
       navbar={
-        <Memobar>
-          <Box w={'auto'} h={'auto'}>
-            {listItems}
+        <Memobar fetcher={fetcher as KeyedMutator<Memo[]>}>
+          <Box w={'auto'}>
+            {listData.map((item, index) => (
+              <ListItem
+                key={index}
+                item={item}
+                fetcher={fetcher as KeyedMutator<Memo[]>}
+              />
+            ))}
           </Box>
         </Memobar>
       }

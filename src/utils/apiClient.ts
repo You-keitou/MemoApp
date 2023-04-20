@@ -1,4 +1,8 @@
-import aspida from '@aspida/axios'
+import aspida, { FetchConfig } from '@aspida/fetch'
 import api from '$/api/$api'
 
-export const apiClient = api(aspida())
+const fetchConfig: FetchConfig = {
+  throwHttpErrors: false
+}
+
+export const apiClient = api(aspida(undefined, fetchConfig))
