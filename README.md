@@ -9,6 +9,20 @@ npm run dev
 # or
 yarn dev
 ```
+## 環境変数設定
+
+server/.env
+```
+API_SERVER_PORT=40769
+API_BASE_PATH=/api
+API_ORIGIN=http://localhost:40769
+API_JWT_SECRET=supersecret
+```
+
+server/prisma/.env
+```
+API_DATABASE_URL=file:./dev.db
+```
 
 Open [http://localhost:8000](http://localhost:8000) with your browser to see the result.
 
