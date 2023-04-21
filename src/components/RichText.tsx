@@ -142,8 +142,8 @@ function Demo({
   const editor = useEditor({
     onBeforeCreate({ editor }) {
       editor.on('update', async () => {
-        //文字数が10000文字を超えたら保存しない
-        if (editor.getText().length > 10000) {
+        //文字数が1000文字を超えたら保存しない
+        if (editor.getText().length > 1000) {
           setIsSaved('unsaved')
           return
         }
@@ -163,7 +163,7 @@ function Demo({
     },
     //フォーカスが外れたときにリクエストを送る
     onBlur({ editor }) {
-      if (editor.getText().length > 10000) {
+      if (editor.getText().length > 1000) {
         setIsSaved('unsaved')
         return
       }
@@ -250,8 +250,8 @@ function Demo({
       <Flex justify={'flex-end'} m={10}>
         <Text mr={10}>メモ文字数</Text>
         {editor && (
-          <Text color={editor?.getText().length > 10000 ? 'red' : 'black'}>
-            {editor?.getText().length}/10000
+          <Text color={editor?.getText().length > 1000 ? 'red' : 'black'}>
+            {editor?.getText().length}/1000
           </Text>
         )}
       </Flex>
