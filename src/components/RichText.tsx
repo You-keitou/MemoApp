@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react'
 import { KeyedMutator } from 'swr'
 import { Memo } from '$prisma/client'
 import { IconAlertCircle, IconCheck, IconRefreshDot } from '@tabler/icons-react'
+import { useRouter } from 'next/router'
 
 //TextEditorのpropsの型を定義する
 type TextEditorProps = {
@@ -104,7 +105,7 @@ function Demo({
   currentMemoId,
   eventHandler
 }: TextEditorProps) {
-  console.log('更新されました' + currentMemoId)
+  const router = useRouter()
   //保存状態を管理する
   const [isSaved, setIsSaved] = useState<'saved' | 'saving' | 'unsaved'>(
     'saved'
@@ -153,7 +154,7 @@ function Demo({
         else {
           await saveDataAndFetch(
             editor.getHTML(),
-            currentMemoId,
+            router.query.id as string,
             'content',
             undefined
           ).then(() => {
