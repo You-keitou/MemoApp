@@ -104,6 +104,7 @@ function Demo({
   currentMemoId,
   eventHandler
 }: TextEditorProps) {
+  console.log('更新されました' + currentMemoId)
   //保存状態を管理する
   const [isSaved, setIsSaved] = useState<'saved' | 'saving' | 'unsaved'>(
     'saved'

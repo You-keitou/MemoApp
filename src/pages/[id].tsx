@@ -34,10 +34,10 @@ const index: NextPage = () => {
     }
   })
 
-  const currentMemo = memos.find((memo) => memo.id === currentMemoId) as Memo
+  const currentMemo = memos.find((memo) => memo.id === router.query.id) as Memo
   return (
     <Layout listOfMemos={allMemoTitleandId} fetcher={mutate}>
-      {currentMemo && (
+      {router.query.id && (
         <Demo
           title={currentMemo.title}
           content={currentMemo.content}
